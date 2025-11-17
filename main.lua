@@ -763,9 +763,6 @@ local function ChangeTheme(Theme)
 	end
 
 	Rayfield.Main.BackgroundColor3 = SelectedTheme.Background
-	-- apply background transparency (use value from theme if present, otherwise fallback to 0.5)
-	Rayfield.Main.BackgroundTransparency = 0.5
-	Rayfield.Main.BackgroundTransparency = (SelectedTheme.BackgroundTransparency ~= nil) and SelectedTheme.BackgroundTransparency or 0.5
 	Rayfield.Main.Topbar.BackgroundColor3 = SelectedTheme.Topbar
 	Rayfield.Main.Topbar.CornerRepair.BackgroundColor3 = SelectedTheme.Topbar
 	Rayfield.Main.Shadow.Image.ImageColor3 = SelectedTheme.Shadow
@@ -790,17 +787,43 @@ local function ChangeTheme(Theme)
 
 	for _, text in ipairs(Rayfield:GetDescendants()) do
 		if text.Parent.Parent ~= Notifications then
-			if text:IsA('TextLabel') or text:IsA('TextBox') then text.TextColor3 = SelectedTheme.TextColor end
+			if text:IsA('TextLabel') or text:IsA('TextBox') then 
+				text.TextColor3 = SelectedTheme.TextColor 
+			end
 		end
 	end
 
 	for _, TabPage in ipairs(Elements:GetChildren()) do
 		for _, Element in ipairs(TabPage:GetChildren()) do
-			if Element.ClassName == "Frame" and Element.Name ~= "Placeholder" and Element.Name ~= "SectionSpacing" and Element.Name ~= "Divider" and Element.Name ~= "SectionTitle" and Element.Name ~= "SearchTitle-fsefsefesfsefesfesfThanks" then
+			if Element.ClassName == "Frame" 
+			and Element.Name ~= "Placeholder" 
+			and Element.Name ~= "SectionSpacing" 
+			and Element.Name ~= "Divider" 
+			and Element.Name ~= "SectionTitle"
+			and Element.Name ~= "SearchTitle-fsefsefesfsefesfesfThanks" then
 				Element.BackgroundColor3 = SelectedTheme.ElementBackground
 				Element.UIStroke.Color = SelectedTheme.ElementStroke
 			end
 		end
+	end
+
+	------------------------------------------------------------------
+	-- 🔥 AQUI É ONDE A TRANSPARÊNCIA É APLICADA *DEPOIS DE TUDO* 🔥
+	------------------------------------------------------------------
+
+	local bgTransparency = (SelectedTheme.BackgroundTransparency ~= nil) 
+		and SelectedTheme.BackgroundTransparency 
+		or 0.5
+
+	Rayfield.Main.BackgroundTransparency = bgTransparency
+
+	if Main:FindFirstChild("Notice") then
+		Main.Notice.BackgroundTransparency = bgTransparency
+	end
+
+	-- sombra opcional (retire se não quiser mexer)
+	if Rayfield.Main:FindFirstChild("Shadow") and Rayfield.Main.Shadow:FindFirstChild("Image") then
+		Rayfield.Main.Shadow.Image.ImageTransparency = bgTransparency
 	end
 end
 
