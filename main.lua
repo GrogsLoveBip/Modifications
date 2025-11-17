@@ -763,7 +763,9 @@ local function ChangeTheme(Theme)
 	end
 
 	Rayfield.Main.BackgroundColor3 = SelectedTheme.Background
+	-- apply background transparency (use value from theme if present, otherwise fallback to 0.5)
 	Rayfield.Main.BackgroundTransparency = 0.5
+	Rayfield.Main.BackgroundTransparency = (SelectedTheme.BackgroundTransparency ~= nil) and SelectedTheme.BackgroundTransparency or 0.5
 	Rayfield.Main.Topbar.BackgroundColor3 = SelectedTheme.Topbar
 	Rayfield.Main.Topbar.CornerRepair.BackgroundColor3 = SelectedTheme.Topbar
 	Rayfield.Main.Shadow.Image.ImageColor3 = SelectedTheme.Shadow
