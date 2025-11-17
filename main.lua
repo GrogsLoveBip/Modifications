@@ -4023,3 +4023,79 @@ end)
 
 return RayfieldLibrary
 
+-- === START: Forçar e debugar BackgroundTransparency ===
+local RunService = game:GetService("RunService")
+
+local function getDesiredBgTransparency()
+	-- usa o campo do theme se existir; caso contrário fallback 0.5
+	return (SelectedTheme and SelectedTheme.BackgroundTransparency ~= nil) and SelectedTheme.BackgroundTransparency or 0.5
+end
+
+-- Debug: avisar e mostrar stack quando alguém alterar a propriedade
+if Rayfield and Rayfield.Main then
+	Rayfield.Main:GetPropertyChangedSignal("BackgroundTransparency"):Connect(function()
+		warn("[Rayfield] BackgroundTransparency foi alterado! valor atual:", Rayfield.Main.BackgroundTransparency)
+		-- imprime stack trace para localizar quem mudou
+		print(debug.traceback("", 2))
+	end)
+	-- também monitora alterações na cor (alguns trechos podem resetar junto)
+	Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
+		-- opcional: comente se poluir logs
+		-- warn("[Rayfield] BackgroundColor3 alterado:", Rayfield.Main.BackgroundColor3)
+		print(debug.traceback("", 2))
+	end)
+end
+
+-- Enforcement contínuo (reaplica a cada frame)
+local _enforceConn
+_enforceConn = RunService.Heartbeat:Connect(function()
+	if not Rayfield or not Rayfield.Main then return end
+
+	local desired = getDesiredBgTransparency()
+
+	-- Main
+	if Rayfield.Main.BackgroundTransparency ~= desired then
+		Rayfield.Main.BackgroundTransparency = desired
+	end
+
+	-- Notice (se existir)
+	if Rayfield.Main:FindFirstChild("Notice") then
+		if Rayfield.Main.Notice.BackgroundTransparency ~= desired then
+			Rayfield.Main.Notice.BackgroundTransparency = desired
+		end
+	end
+
+	-- Shadow (ImageTransparency) — muitas UIs usam Image para sombra/overlay
+	if Rayfield.Main:FindFirstChild("Shadow") and Rayfield.Main.Shadow:FindFirstChild("Image") then
+		if Rayfield.Main.Shadow.Image.ImageTransparency ~= desired then
+			Rayfield.Main.Shadow.Image.ImageTransparency = desired
+		end
+	end
+
+	-- Caso haja um overlay opaco cobrindo o Main (ImageLabel chamado "Overlay" por exemplo),
+	-- podemos procurar por objetos que têm ImageTransparency/BackgroundTransparency e ajustar.
+	-- (comentado por padrão; descomente se quiser forçar tudo)
+	--[[
+	for _, obj in ipairs(Rayfield.Main:GetDescendants()) do
+		if obj:IsA("ImageLabel") or obj:IsA("ImageButton") then
+			if obj.ImageTransparency ~= desired then
+				obj.ImageTransparency = desired
+			end
+		elseif obj:IsA("Frame") or obj:IsA("TextLabel") then
+			if obj.BackgroundTransparency ~= desired then
+				obj.BackgroundTransparency = desired
+			end
+		end
+	end
+	]]
+end)
+
+-- Opcional: função para desligar enforcement depois de achar o problema
+local function stopEnforcement()
+	if _enforceConn then
+		_enforceConn:Disconnect()
+		_enforceConn = nil
+		print("[Rayfield] Enforcement de BackgroundTransparency desligado.")
+	end
+end
+-- === END: Forçar e debugar BackgroundTransparency ===
